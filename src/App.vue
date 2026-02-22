@@ -43,6 +43,7 @@ interface UserRow extends RowData {
 const table = ref<TableExpose<UserRow> | null>(null);
 const data = ref<UserRow[]>([]);
 const loading = ref(false);
+const generationTaskId = ref(0);
 
 const columns = ref<ColumnConfig<UserRow>[]>([
   { key: 'id', title: 'ID', width: 80 },
@@ -60,19 +61,25 @@ const columns = ref<ColumnConfig<UserRow>[]>([
 
 // 生成测试数据
 const generateData = async (count: number) => {
+  const currentTaskId = ++generationTaskId.value;
   loading.value = true;
   data.value = [];
+  table.value?.scrollTo(0);
 
   // 分批生成数据
   const batchSize = 10000;
   const totalBatches = Math.ceil(count / batchSize);
 
   for (let batch = 0; batch < totalBatches; batch++) {
-    const batchData: UserRow[] = [];
-    const start = batch * batchSize;
-    const end = Math.min(start + batchSize, count);
+    if (currentTaskId !== generationTaskId.value) {
+      return;
+    }
 
-    for (let i = 1; i < end; i++) {
+    const batchData: UserRow[] = [];
+    const startId = batch * batchSize + 1;
+    const endId = Math.min((batch + 1) * batchSize, count);
+
+    for (let i = startId; i <= endId; i++) {
       const row = {
         id: i,
         name: `User ${i}`,
@@ -84,8 +91,12 @@ const generateData = async (count: number) => {
       batchData.push(row);
     }
 
-    data.value = [...data.value, ...batchData];
+    data.value.push(...batchData);
     await new Promise((resolve) => setTimeout(resolve, 0)); // 让出主线程
+  }
+
+  if (currentTaskId !== generationTaskId.value) {
+    return;
   }
 
   loading.value = false;
@@ -104,7 +115,10 @@ const scrollToRandom = () => {
 
 // 清空数据
 const clearData = () => {
+  generationTaskId.value++;
   data.value = [];
+  loading.value = false;
+  table.value?.refresh();
 };
 
 // 处理行点击
