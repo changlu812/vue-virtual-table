@@ -1,4 +1,4 @@
-# vue-virtual-table
+# vue-virtual-table虚拟滚动表格组件库
 
 一个面向 Vue 3 的虚拟滚动表格组件库，支持百万级数据、TypeScript 强类型、排序与插槽扩展。
 
