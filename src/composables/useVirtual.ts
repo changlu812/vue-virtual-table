@@ -1,5 +1,6 @@
 import {
   ref,
+  shallowRef,
   onMounted,
   onUnmounted,
   computed,
@@ -9,26 +10,27 @@ import {
   type ComputedRef,
 } from 'vue';
 import { throttle } from '../utils/debounce-throttle';
+import type { RowData } from '../types';
 
-interface UseVirtualOptions {
+interface UseVirtualOptions<T extends RowData> {
   containerRef: Ref<HTMLElement | null>;
-  data: Ref<any[]>;
+  data: Readonly<Ref<T[]>>;
   rowHeight: number;
   containerHeight: number | Ref<number> | ComputedRef<number>;
   bufferSize?: number;
 }
 
-export function useVirtual({
+export function useVirtual<T extends RowData>({
   containerRef,
   data,
   rowHeight,
   containerHeight,
   bufferSize = 5,
-}: UseVirtualOptions) {
+}: UseVirtualOptions<T>) {
   const startIndex = ref(0);
   const endIndex = ref(0);
   const offsetTop = ref(0);
-  const visibleData = ref<any[]>([]);
+  const visibleData = shallowRef<T[]>([]);
 
   const totalHeight = computed(() => data.value.length * rowHeight);
 

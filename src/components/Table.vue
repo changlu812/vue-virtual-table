@@ -21,11 +21,11 @@
       <div class="visible-data" :style="{ transform: `translateY(${offsetTop}px)` }">
         <TableRow
           v-for="(row, index) in visibleData"
-          :key="row[keyField]"
+          :key="getRowKey(row, startIndex + index)"
           :row="row"
           :columns="columns"
           :index="startIndex + index"
-          @click="handleRowClick(row, startIndex + index, $event)"
+          @click="handleRowClick"
         />
       </div>
 
@@ -35,53 +35,27 @@
   </div>
 </template>
 
-<script lang="ts" setup>
+<script lang="ts" setup generic="T extends RowData">
 import { ref, computed, toRef, watch, nextTick, onMounted, onUnmounted } from 'vue';
 import TableRow from './TableRow.vue';
 import { useVirtual } from '../composables/useVirtual';
-import type { ColumnConfig } from '../types';
+import type { ColumnConfig, RowData, TableProps } from '../types';
 
 // 定义容器 ref
 const containerRef = ref<HTMLElement | null>(null);
 
-const props = defineProps({
-  data: {
-    type: Array,
-    default: () => [],
-  },
-  columns: {
-    type: Array as () => ColumnConfig[],
-    default: () => [],
-  },
-  rowHeight: {
-    type: Number,
-    default: 36,
-  },
-  height: {
-    type: [Number, String],
-    default: 500,
-  },
-  width: {
-    type: [Number, String],
-    default: '100%',
-  },
-  bufferSize: {
-    type: Number,
-    default: 5,
-  },
-  keyField: {
-    type: String,
-    default: 'id',
-  },
-  loading: {
-    type: Boolean,
-    default: false,
-  },
+const props = withDefaults(defineProps<TableProps<T>>(), {
+  rowHeight: 36,
+  height: 500,
+  width: '100%',
+  bufferSize: 5,
+  keyField: 'id',
+  loading: false,
 });
 
 const emit = defineEmits<{
-  'row-click': [row: any, index: number, event: Event];
-  'cell-click': [row: any, column: ColumnConfig, index: number, event: Event];
+  'row-click': [row: T, index: number, event: MouseEvent];
+  'cell-click': [row: T, column: ColumnConfig<T>, index: number, event: MouseEvent];
   scroll: [scrollTop: number, scrollLeft: number, startIndex: number, endIndex: number];
 }>();
 
@@ -98,7 +72,7 @@ const normalizeSize = (size: number | string) => {
   return size;
 };
 
-const getColumnStyle = (column: ColumnConfig) => {
+const getColumnStyle = (column: ColumnConfig<T>) => {
   const width = column.width ? normalizeSize(column.width) : '';
 
   if (width) {
@@ -114,6 +88,11 @@ const getColumnStyle = (column: ColumnConfig) => {
     minWidth: '0',
     textAlign: column.align || 'left',
   };
+};
+
+const getRowKey = (row: T, fallbackIndex: number) => {
+  const keyValue = row[props.keyField];
+  return typeof keyValue === 'string' || typeof keyValue === 'number' ? keyValue : fallbackIndex;
 };
 
 const tableStyle = computed(() => ({
@@ -141,16 +120,16 @@ const updateScrollbarWidth = () => {
 const dataRef = toRef(props, 'data');
 
 // 使用虚拟滚动逻辑
-const { visibleData, startIndex, offsetTop, totalHeight, scrollTo, refresh } = useVirtual({
+const { visibleData, startIndex, offsetTop, totalHeight, scrollTo, refresh } = useVirtual<T>({
   containerRef,
-  data: dataRef as any,
+  data: dataRef,
   rowHeight: props.rowHeight,
   containerHeight: containerHeight,
   bufferSize: props.bufferSize,
 });
 
 // 处理行点击
-const handleRowClick = (row: any, index: number, event: Event) => {
+const handleRowClick = (row: T, index: number, event: MouseEvent) => {
   emit('row-click', row, index, event);
 };
 

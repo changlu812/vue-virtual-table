@@ -30,13 +30,21 @@
 <script lang="ts" setup>
 import { ref, onMounted } from 'vue';
 import Table from './components/Table.vue';
-import type { ColumnConfig } from './types';
+import type { ColumnConfig, RowData, TableExpose } from './types';
 
-const table = ref<any>(null);
-const data = ref<any[]>([]);
+interface UserRow extends RowData {
+  id: number;
+  name: string;
+  age: number;
+  email: string;
+  address: string;
+}
+
+const table = ref<TableExpose<UserRow> | null>(null);
+const data = ref<UserRow[]>([]);
 const loading = ref(false);
 
-const columns = ref<ColumnConfig[]>([
+const columns = ref<ColumnConfig<UserRow>[]>([
   { key: 'id', title: 'ID', width: 80 },
   { key: 'name', title: '姓名', width: 120 },
   { key: 'age', title: '年龄', width: 80, align: 'center' },
@@ -44,7 +52,7 @@ const columns = ref<ColumnConfig[]>([
   {
     key: 'address',
     title: '地址',
-    render: (row: any) => {
+    render: (row) => {
       return row.address.length > 20 ? row.address.substring(0, 20) + '...' : row.address;
     },
   },
@@ -60,7 +68,7 @@ const generateData = async (count: number) => {
   const totalBatches = Math.ceil(count / batchSize);
 
   for (let batch = 0; batch < totalBatches; batch++) {
-    const batchData = [];
+    const batchData: UserRow[] = [];
     const start = batch * batchSize;
     const end = Math.min(start + batchSize, count);
 
@@ -100,7 +108,7 @@ const clearData = () => {
 };
 
 // 处理行点击
-const handleRowClick = (row: any, index: number) => {
+const handleRowClick = (row: UserRow, index: number) => {
   console.log('Row clicked:', row, index);
 };
 

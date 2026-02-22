@@ -19,27 +19,18 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-import type { ColumnConfig } from '../types';
+<script lang="ts" setup generic="T extends RowData">
+import type { ColumnConfig, RowData } from '../types';
 
-defineProps({
-  row: {
-    type: Object,
-    required: true,
-  },
-  columns: {
-    type: Array as () => ColumnConfig[],
-    required: true,
-  },
-  index: {
-    type: Number,
-    required: true,
-  },
-});
+defineProps<{
+  row: T;
+  columns: ColumnConfig<T>[];
+  index: number;
+}>();
 
 defineEmits<{
-  click: [row: any, index: number, event: Event];
-  'cell-click': [row: any, column: ColumnConfig, index: number, event: Event];
+  click: [row: T, index: number, event: MouseEvent];
+  'cell-click': [row: T, column: ColumnConfig<T>, index: number, event: MouseEvent];
 }>();
 
 const normalizeSize = (size: number | string) => {
@@ -52,7 +43,7 @@ const normalizeSize = (size: number | string) => {
   return size;
 };
 
-const getColumnStyle = (column: ColumnConfig) => {
+const getColumnStyle = (column: ColumnConfig<T>) => {
   const width = column.width ? normalizeSize(column.width) : '';
 
   if (width) {
