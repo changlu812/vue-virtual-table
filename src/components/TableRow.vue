@@ -7,20 +7,22 @@
       :style="getColumnStyle(column)"
       @click.stop="$emit('cell-click', row, column, index, $event)"
     >
-      <!-- 自定义渲染 -->
-      <template v-if="column.render">
-        {{ column.render(row, index) }}
-      </template>
-      <!-- 默认渲染 -->
-      <template v-else>
-        {{ row[column.key] }}
-      </template>
+      <slot name="cell" :row="row" :column="column" :index="index" :value="row[column.key]">
+        <!-- 自定义渲染 -->
+        <template v-if="column.render">
+          {{ column.render(row, index) }}
+        </template>
+        <!-- 默认渲染 -->
+        <template v-else>
+          {{ row[column.key] }}
+        </template>
+      </slot>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup generic="T extends RowData">
-import type { ColumnConfig, RowData } from '../types';
+import type { CellSlotProps, ColumnConfig, RowData } from '../types';
 
 defineProps<{
   row: T;
@@ -31,6 +33,10 @@ defineProps<{
 defineEmits<{
   click: [row: T, index: number, event: MouseEvent];
   'cell-click': [row: T, column: ColumnConfig<T>, index: number, event: MouseEvent];
+}>();
+
+defineSlots<{
+  cell?: (props: CellSlotProps<T>) => unknown;
 }>();
 
 const normalizeSize = (size: number | string) => {

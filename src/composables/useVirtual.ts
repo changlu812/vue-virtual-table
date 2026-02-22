@@ -17,7 +17,7 @@ const MAX_SCROLL_HEIGHT = 16_000_000;
 
 interface UseVirtualOptions<T extends RowData> {
   containerRef: Ref<HTMLElement | null>;
-  data: Readonly<Ref<T[]>>;
+  data: Readonly<Ref<readonly T[]>>;
   rowHeight: number;
   containerHeight: number | Ref<number> | ComputedRef<number>;
   bufferSize?: number;

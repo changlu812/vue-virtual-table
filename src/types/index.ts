@@ -1,14 +1,22 @@
 import type { VNodeChild } from 'vue';
 
 export type RowData = Record<string, unknown>;
+export type RowKey<T extends RowData = RowData> = Extract<keyof T, string>;
+export type SortOrder = 'asc' | 'desc';
+
+export interface SortState<T extends RowData = RowData> {
+  key: RowKey<T>;
+  order: SortOrder;
+}
 
 export interface ColumnConfig<T extends RowData = RowData> {
-  key: string; // 列唯一标识
+  key: RowKey<T>; // 列唯一标识
   title: string; // 列标题
   width?: number | string; // 列宽度
   align?: 'left' | 'center' | 'right'; // 对齐方式
   render?: (row: T, index: number) => VNodeChild; // 自定义渲染函数
   sortable?: boolean; // 是否可排序
+  sorter?: (a: T, b: T) => number; // 自定义排序函数
   resizable?: boolean; // 是否可调整宽度
 }
 
@@ -19,8 +27,9 @@ export interface TableProps<T extends RowData = RowData> {
   height?: number | string;
   width?: number | string;
   bufferSize?: number;
-  keyField?: string;
+  keyField?: RowKey<T>;
   loading?: boolean;
+  defaultSort?: SortState<T> | null;
 }
 
 export interface VirtualProps<T extends RowData = RowData> {
@@ -34,4 +43,12 @@ export interface TableExpose<T extends RowData = RowData> {
   scrollTo: (index: number) => void;
   getVisibleData: () => T[];
   refresh: () => void;
+  setSort: (sort: SortState<T> | null) => void;
+}
+
+export interface CellSlotProps<T extends RowData = RowData> {
+  row: T;
+  column: ColumnConfig<T>;
+  index: number;
+  value: unknown;
 }
