@@ -1,8 +1,5 @@
 <template>
-  <div
-    class="table-row"
-    @click="$emit('click', row, index, $event)"
-  >
+  <div class="table-row" @click="$emit('click', row, index, $event)">
     <div
       v-for="column in columns"
       :key="column.key"
@@ -25,28 +22,28 @@
 <script lang="ts" setup>
 import type { ColumnConfig } from '../types';
 
-const props = defineProps({
+defineProps({
   row: {
     type: Object,
-    required: true
+    required: true,
   },
   columns: {
     type: Array as () => ColumnConfig[],
-    required: true
+    required: true,
   },
   index: {
     type: Number,
-    required: true
-  }
+    required: true,
+  },
 });
 
-const emit = defineEmits<{
-  'click': [row: any, index: number, event: Event];
+defineEmits<{
+  click: [row: any, index: number, event: Event];
   'cell-click': [row: any, column: ColumnConfig, index: number, event: Event];
 }>();
 
 const normalizeSize = (size: number | string) => {
-  if (typeof size === "number") {
+  if (typeof size === 'number') {
     return `${size}px`;
   }
   if (/^\d+(\.\d+)?$/.test(size)) {
@@ -56,20 +53,20 @@ const normalizeSize = (size: number | string) => {
 };
 
 const getColumnStyle = (column: ColumnConfig) => {
-  const width = column.width ? normalizeSize(column.width) : "";
+  const width = column.width ? normalizeSize(column.width) : '';
 
   if (width) {
     return {
       width,
       flex: `0 0 ${width}`,
-      textAlign: column.align || "left",
+      textAlign: column.align || 'left',
     };
   }
 
   return {
-    flex: "1 1 0",
-    minWidth: "0",
-    textAlign: column.align || "left",
+    flex: '1 1 0',
+    minWidth: '0',
+    textAlign: column.align || 'left',
   };
 };
 </script>

@@ -28,26 +28,24 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, onMounted } from "vue";
-import Table from "./components/Table.vue";
-import type { ColumnConfig } from "./types";
+import { ref, onMounted } from 'vue';
+import Table from './components/Table.vue';
+import type { ColumnConfig } from './types';
 
 const table = ref<any>(null);
 const data = ref<any[]>([]);
 const loading = ref(false);
 
 const columns = ref<ColumnConfig[]>([
-  { key: "id", title: "ID", width: 80 },
-  { key: "name", title: "姓名", width: 120 },
-  { key: "age", title: "年龄", width: 80, align: "center" },
-  { key: "email", title: "邮箱", width: 200 },
+  { key: 'id', title: 'ID', width: 80 },
+  { key: 'name', title: '姓名', width: 120 },
+  { key: 'age', title: '年龄', width: 80, align: 'center' },
+  { key: 'email', title: '邮箱', width: 200 },
   {
-    key: "address",
-    title: "地址",
+    key: 'address',
+    title: '地址',
     render: (row: any) => {
-      return row.address.length > 20
-        ? row.address.substring(0, 20) + "..."
-        : row.address;
+      return row.address.length > 20 ? row.address.substring(0, 20) + '...' : row.address;
     },
   },
 ]);
@@ -66,7 +64,7 @@ const generateData = async (count: number) => {
     const start = batch * batchSize;
     const end = Math.min(start + batchSize, count);
 
-    for (let i = 1 ; i < end; i++) {
+    for (let i = 1; i < end; i++) {
       const row = {
         id: i,
         name: `User ${i}`,
@@ -103,7 +101,7 @@ const clearData = () => {
 
 // 处理行点击
 const handleRowClick = (row: any, index: number) => {
-  console.log("Row clicked:", row, index);
+  console.log('Row clicked:', row, index);
 };
 
 // 处理滚动
@@ -113,7 +111,7 @@ const handleScroll = (
   startIndex: number,
   endIndex: number,
 ) => {
-  console.log("Scroll:", { scrollTop, scrollLeft, startIndex, endIndex });
+  console.log('Scroll:', { scrollTop, scrollLeft, startIndex, endIndex });
 };
 
 // 初始化

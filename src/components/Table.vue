@@ -13,19 +13,12 @@
     </div>
 
     <!-- 表体 -->
-    <div
-      ref="containerRef"
-      class="table-body"
-      :style="{ height: containerHeight + 'px' }"
-    >
+    <div ref="containerRef" class="table-body" :style="{ height: containerHeight + 'px' }">
       <!-- 占位元素 -->
       <div class="placeholder" :style="{ height: totalHeight + 'px' }"></div>
 
       <!-- 可见区域数据 -->
-      <div
-        class="visible-data"
-        :style="{ transform: `translateY(${offsetTop}px)` }"
-      >
+      <div class="visible-data" :style="{ transform: `translateY(${offsetTop}px)` }">
         <TableRow
           v-for="(row, index) in visibleData"
           :key="row[keyField]"
@@ -43,10 +36,10 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed, toRef, watch, nextTick, onMounted, onUnmounted } from "vue";
-import TableRow from "./TableRow.vue";
-import { useVirtual } from "../composables/useVirtual";
-import type { ColumnConfig } from "../types";
+import { ref, computed, toRef, watch, nextTick, onMounted, onUnmounted } from 'vue';
+import TableRow from './TableRow.vue';
+import { useVirtual } from '../composables/useVirtual';
+import type { ColumnConfig } from '../types';
 
 // 定义容器 ref
 const containerRef = ref<HTMLElement | null>(null);
@@ -70,7 +63,7 @@ const props = defineProps({
   },
   width: {
     type: [Number, String],
-    default: "100%",
+    default: '100%',
   },
   bufferSize: {
     type: Number,
@@ -78,7 +71,7 @@ const props = defineProps({
   },
   keyField: {
     type: String,
-    default: "id",
+    default: 'id',
   },
   loading: {
     type: Boolean,
@@ -87,21 +80,16 @@ const props = defineProps({
 });
 
 const emit = defineEmits<{
-  "row-click": [row: any, index: number, event: Event];
-  "cell-click": [row: any, column: ColumnConfig, index: number, event: Event];
-  scroll: [
-    scrollTop: number,
-    scrollLeft: number,
-    startIndex: number,
-    endIndex: number,
-  ];
+  'row-click': [row: any, index: number, event: Event];
+  'cell-click': [row: any, column: ColumnConfig, index: number, event: Event];
+  scroll: [scrollTop: number, scrollLeft: number, startIndex: number, endIndex: number];
 }>();
 
 const headerHeight = ref(40);
 const scrollbarWidth = ref(0);
 
 const normalizeSize = (size: number | string) => {
-  if (typeof size === "number") {
+  if (typeof size === 'number') {
     return `${size}px`;
   }
   if (/^\d+(\.\d+)?$/.test(size)) {
@@ -111,20 +99,20 @@ const normalizeSize = (size: number | string) => {
 };
 
 const getColumnStyle = (column: ColumnConfig) => {
-  const width = column.width ? normalizeSize(column.width) : "";
+  const width = column.width ? normalizeSize(column.width) : '';
 
   if (width) {
     return {
       width,
       flex: `0 0 ${width}`,
-      textAlign: column.align || "left",
+      textAlign: column.align || 'left',
     };
   }
 
   return {
-    flex: "1 1 0",
-    minWidth: "0",
-    textAlign: column.align || "left",
+    flex: '1 1 0',
+    minWidth: '0',
+    textAlign: column.align || 'left',
   };
 };
 
@@ -135,9 +123,7 @@ const tableStyle = computed(() => ({
 
 const containerHeight = computed(() => {
   const numericHeight =
-    typeof props.height === "number"
-      ? props.height
-      : Number.parseFloat(props.height);
+    typeof props.height === 'number' ? props.height : Number.parseFloat(props.height);
 
   if (Number.isFinite(numericHeight)) {
     return Math.max(0, numericHeight - headerHeight.value);
@@ -148,26 +134,24 @@ const containerHeight = computed(() => {
 
 const updateScrollbarWidth = () => {
   if (!containerRef.value) return;
-  scrollbarWidth.value =
-    containerRef.value.offsetWidth - containerRef.value.clientWidth;
+  scrollbarWidth.value = containerRef.value.offsetWidth - containerRef.value.clientWidth;
 };
 
 // 使用 toRef 获取 props.data 的响应式引用
-const dataRef = toRef(props, "data");
+const dataRef = toRef(props, 'data');
 
 // 使用虚拟滚动逻辑
-const { visibleData, startIndex, offsetTop, totalHeight, scrollTo, refresh } =
-  useVirtual({
-    containerRef,
-    data: dataRef as any,
-    rowHeight: props.rowHeight,
-    containerHeight: containerHeight,
-    bufferSize: props.bufferSize,
-  });
+const { visibleData, startIndex, offsetTop, totalHeight, scrollTo, refresh } = useVirtual({
+  containerRef,
+  data: dataRef as any,
+  rowHeight: props.rowHeight,
+  containerHeight: containerHeight,
+  bufferSize: props.bufferSize,
+});
 
 // 处理行点击
 const handleRowClick = (row: any, index: number, event: Event) => {
-  emit("row-click", row, index, event);
+  emit('row-click', row, index, event);
 };
 
 // 暴露方法
@@ -191,11 +175,11 @@ onMounted(() => {
   nextTick(() => {
     updateScrollbarWidth();
   });
-  window.addEventListener("resize", updateScrollbarWidth);
+  window.addEventListener('resize', updateScrollbarWidth);
 });
 
 onUnmounted(() => {
-  window.removeEventListener("resize", updateScrollbarWidth);
+  window.removeEventListener('resize', updateScrollbarWidth);
 });
 </script>
 
@@ -209,7 +193,7 @@ onUnmounted(() => {
 
 .table-header {
   display: flex;
-  height: v-bind(headerHeight + "px");
+  height: v-bind(headerHeight + 'px');
   background-color: #f5f7fa;
   border-bottom: 1px solid #eaeaea;
   position: sticky;

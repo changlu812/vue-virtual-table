@@ -7,8 +7,8 @@ import {
   nextTick,
   type Ref,
   type ComputedRef,
-} from "vue";
-import { throttle } from "../utils";
+} from 'vue';
+import { throttle } from '../utils/debounce-throttle';
 
 interface UseVirtualOptions {
   containerRef: Ref<HTMLElement | null>;
@@ -34,7 +34,7 @@ export function useVirtual({
 
   // 获取容器高度（支持响应式和静态值）
   const getContainerHeight = () => {
-    if (typeof containerHeight === "number") {
+    if (typeof containerHeight === 'number') {
       return containerHeight;
     }
     return containerHeight.value;
@@ -47,10 +47,7 @@ export function useVirtual({
     const scrollTop = containerRef.value?.scrollTop || 0;
 
     // 计算可见区域起始索引（包含缓冲区）
-    const newStartIndex = Math.max(
-      0,
-      Math.floor(scrollTop / rowHeight) - bufferSize,
-    );
+    const newStartIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - bufferSize);
 
     // 计算可见区域结束索引（包含缓冲区）
     const newEndIndex = Math.min(
@@ -97,12 +94,9 @@ export function useVirtual({
   );
 
   // 监听容器高度变化（如果是响应式的）
-  if (typeof containerHeight !== "number") {
+  if (typeof containerHeight !== 'number') {
     watch(
-      () =>
-        typeof containerHeight === "number"
-          ? containerHeight
-          : containerHeight.value,
+      () => (typeof containerHeight === 'number' ? containerHeight : containerHeight.value),
       () => {
         nextTick(() => {
           calculateVisibleRange();
@@ -116,7 +110,7 @@ export function useVirtual({
     nextTick(() => {
       calculateVisibleRange();
       if (containerRef.value) {
-        containerRef.value.addEventListener("scroll", handleScroll, {
+        containerRef.value.addEventListener('scroll', handleScroll, {
           passive: true,
         });
       }
@@ -124,7 +118,7 @@ export function useVirtual({
   });
 
   onUnmounted(() => {
-    containerRef.value?.removeEventListener("scroll", handleScroll);
+    containerRef.value?.removeEventListener('scroll', handleScroll);
   });
 
   return {
