@@ -12,6 +12,9 @@ import {
 import { throttle } from '../utils/debounce-throttle';
 import type { RowData } from '../types';
 
+// Keep scrollable height below browser pixel limits (~16.7M in many engines).
+const MAX_SCROLL_HEIGHT = 16_000_000;
+
 interface UseVirtualOptions<T extends RowData> {
   containerRef: Ref<HTMLElement | null>;
   data: Readonly<Ref<T[]>>;
@@ -32,7 +35,8 @@ export function useVirtual<T extends RowData>({
   const offsetTop = ref(0);
   const visibleData = shallowRef<T[]>([]);
 
-  const totalHeight = computed(() => data.value.length * rowHeight);
+  const logicalTotalHeight = computed(() => data.value.length * rowHeight);
+  const totalHeight = computed(() => Math.min(logicalTotalHeight.value, MAX_SCROLL_HEIGHT));
 
   // 获取容器高度（支持响应式和静态值）
   const getContainerHeight = () => {
@@ -42,23 +46,57 @@ export function useVirtual<T extends RowData>({
     return containerHeight.value;
   };
 
+  const getScrollBounds = (currentContainerHeight: number) => {
+    const logicalMaxScrollTop = Math.max(0, logicalTotalHeight.value - currentContainerHeight);
+    const physicalMaxScrollTop = Math.max(0, totalHeight.value - currentContainerHeight);
+    return { logicalMaxScrollTop, physicalMaxScrollTop };
+  };
+
+  const physicalToLogicalScrollTop = (
+    physicalScrollTop: number,
+    currentContainerHeight: number,
+  ) => {
+    const { logicalMaxScrollTop, physicalMaxScrollTop } = getScrollBounds(currentContainerHeight);
+    if (logicalMaxScrollTop === 0 || physicalMaxScrollTop === 0) {
+      return 0;
+    }
+    return (physicalScrollTop / physicalMaxScrollTop) * logicalMaxScrollTop;
+  };
+
+  const logicalToPhysicalScrollTop = (logicalScrollTop: number, currentContainerHeight: number) => {
+    const { logicalMaxScrollTop, physicalMaxScrollTop } = getScrollBounds(currentContainerHeight);
+    if (logicalMaxScrollTop === 0 || physicalMaxScrollTop === 0) {
+      return logicalScrollTop;
+    }
+    const clampedLogicalScrollTop = Math.min(Math.max(logicalScrollTop, 0), logicalMaxScrollTop);
+    return (clampedLogicalScrollTop / logicalMaxScrollTop) * physicalMaxScrollTop;
+  };
+
   const calculateVisibleRange = () => {
     const currentContainerHeight = getContainerHeight();
 
-    // 如果没有容器引用，使用传入的容器高度计算
-    const scrollTop = containerRef.value?.scrollTop || 0;
+    // Physical scrollTop may be compressed for very large lists.
+    const physicalScrollTop = containerRef.value?.scrollTop || 0;
+    const logicalScrollTop = physicalToLogicalScrollTop(physicalScrollTop, currentContainerHeight);
+    const { logicalMaxScrollTop, physicalMaxScrollTop } = getScrollBounds(currentContainerHeight);
+    const scrollScale =
+      logicalMaxScrollTop > 0 && physicalMaxScrollTop > 0
+        ? logicalMaxScrollTop / physicalMaxScrollTop
+        : 1;
+    const logicalViewportHeight = currentContainerHeight * scrollScale;
 
     // 计算可见区域起始索引（包含缓冲区）
-    const newStartIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - bufferSize);
+    const newStartIndex = Math.max(0, Math.floor(logicalScrollTop / rowHeight) - bufferSize);
 
     // 计算可见区域结束索引（包含缓冲区）
     const newEndIndex = Math.min(
       data.value.length,
-      Math.ceil((scrollTop + currentContainerHeight) / rowHeight) + bufferSize,
+      Math.ceil((logicalScrollTop + logicalViewportHeight) / rowHeight) + bufferSize,
     );
 
     // 计算偏移量
-    const newOffsetTop = newStartIndex * rowHeight;
+    const logicalOffsetTop = newStartIndex * rowHeight;
+    const newOffsetTop = logicalToPhysicalScrollTop(logicalOffsetTop, currentContainerHeight);
 
     // 更新状态
     startIndex.value = newStartIndex;
@@ -73,7 +111,12 @@ export function useVirtual<T extends RowData>({
   // 滚动到指定行
   const scrollTo = (index: number) => {
     if (!containerRef.value) return;
-    containerRef.value.scrollTop = index * rowHeight;
+    const currentContainerHeight = getContainerHeight();
+    const logicalScrollTop = index * rowHeight;
+    containerRef.value.scrollTop = logicalToPhysicalScrollTop(
+      logicalScrollTop,
+      currentContainerHeight,
+    );
     calculateVisibleRange();
   };
 
